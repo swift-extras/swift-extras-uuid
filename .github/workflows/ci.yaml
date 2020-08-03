@@ -1,0 +1,108 @@
+name: CI
+on: 
+  push:
+    branches: 
+    - main
+  pull_request:
+    branches: 
+    - "*"
+
+jobs:
+
+  "sanity-Tests":
+    runs-on: macOS-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+    - name: Install swiftformat
+      run: brew install swiftformat
+    - name: Run sanity
+      run: ./scripts/sanity.sh .
+
+  "tuxOS-Tests":
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        images:
+        - swift:5.1
+        - swift:5.2
+        - swiftlang/swift:nightly-5.3-bionic
+        - swiftlang/swift:nightly-bionic
+    container:
+      image: ${{ matrix.images }}
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+    - name: Test
+      run: swift test --enable-code-coverage --enable-test-discovery
+    - name: Convert coverage files
+      run: |
+        llvm-cov export -format="lcov" \
+          .build/debug/swift-extras-uuidPackageTests.xctest \
+          -ignore-filename-regex="\/Tests\/" \
+          -instr-profile .build/debug/codecov/default.profdata > info.lcov
+    - name: Install curl
+      run: apt-get update && apt-get install -y curl # required by the codecov action.
+    - name: Upload to codecov.io
+      uses: codecov/codecov-action@v1
+      with:
+        file: info.lcov
+
+  "tuxOS-Performance-Tests":
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        images:
+        - swift:5.1
+        - swift:5.2
+        - swiftlang/swift:nightly-5.3-bionic
+        - swiftlang/swift:nightly-bionic
+    container:
+      image: ${{ matrix.images }}
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+    - name: Build and run test
+      run: swift run -c release --enable-test-discovery
+
+  "macOS-Tests":
+    runs-on: macOS-latest
+    strategy:
+      matrix:
+        xcode:
+        - Xcode_11.1.app
+        - Xcode_11.6.app
+        - Xcode_12.app
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+    - name: Show all Xcode versions
+      run: ls -an /Applications/ | grep Xcode*
+    - name: Change Xcode command line tools
+      run: sudo xcode-select -s /Applications/${{ matrix.xcode }}/Contents/Developer
+    - name: Swift version
+      run: swift --version
+    - name: Xcode Tests
+      run: |
+        swift package generate-xcodeproj --skip-extra-files --enable-code-coverage
+        xcodebuild -quiet -parallel-testing-enabled YES -scheme swift-extras-uuid-Package -enableCodeCoverage YES build test
+    - name: Codecov
+      run: bash <(curl -s https://codecov.io/bash) -f info.lcov
+
+  "macOS-Performance-Tests":
+    runs-on: macOS-latest
+    strategy:
+      matrix:
+        xcode:
+        - Xcode_11.1.app
+        - Xcode_11.6.app
+        - Xcode_12.app
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+    - name: Change Xcode command line tools
+      run: sudo xcode-select -s /Applications/${{ matrix.xcode }}/Contents/Developer
+    - name: Swift version
+      run: swift --version
+    - name: Build and run test
+      run: swift run -c release
