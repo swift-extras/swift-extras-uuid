@@ -111,22 +111,22 @@ extension XUUID: Encodable {
 
 // MARK: - SIMD -
 
-extension XUUID {
-    public init(vector: SIMD16<UInt8>) {
+public extension XUUID {
+    init(vector: SIMD16<UInt8>) {
         self._uuid = (vector[0], vector[1], vector[2], vector[3],
                       vector[4], vector[5], vector[6], vector[7],
                       vector[8], vector[9], vector[10], vector[11],
                       vector[12], vector[13], vector[14], vector[15])
     }
 
-    public var vector: SIMD16<UInt8> {
+    var vector: SIMD16<UInt8> {
         SIMD16(self._uuid.0, self._uuid.1, self._uuid.2, self._uuid.3,
                self._uuid.4, self._uuid.5, self._uuid.6, self._uuid.7,
                self._uuid.8, self._uuid.9, self._uuid.10, self._uuid.11,
                self._uuid.12, self._uuid.13, self._uuid.14, self._uuid.15)
     }
 
-    public static func fromUUIDStringUsingSIMD(_ string: String) -> XUUID? {
+    static func fromUUIDStringUsingSIMD(_ string: String) -> XUUID? {
         guard string.utf8.count == 36 else {
             // invalid length
             return nil
@@ -188,7 +188,6 @@ extension XUUID {
 }
 
 // MARK: - Implementation details -
-
 
 extension XUUID {
     /// thread safe secure random number generator.

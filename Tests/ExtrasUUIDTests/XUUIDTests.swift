@@ -57,7 +57,7 @@ final class XUUIDTests: XCTestCase {
         XCTAssertEqual(fduuid.description, xuuid.description)
         XCTAssertEqual(fduuid.debugDescription, xuuid.debugDescription)
     }
-    
+
     func testFoundationInteropFromFoundation() {
         let fduuid = UUID()
         let xuuid = XUUID(uuid: fduuid.uuid)
@@ -79,7 +79,7 @@ final class XUUIDTests: XCTestCase {
         XCTAssertEqual(fduuid.uuid.14, xuuid.uuid.14)
         XCTAssertEqual(fduuid.uuid.15, xuuid.uuid.15)
     }
-    
+
     func testFoundationInteropToFoundation() {
         let xuuid = XUUID()
         let fduuid = UUID(uuid: xuuid.uuid)
@@ -141,7 +141,7 @@ final class XUUIDTests: XCTestCase {
             let uuid: XUUID
         }
         let uuid = XUUID()
-        let data = #"{"uuid":"\#(uuid.uuidString)"}"# .data(using: .utf8)
+        let data = #"{"uuid":"\#(uuid.uuidString)"}"#.data(using: .utf8)
 
         var result: Test?
         XCTAssertNoThrow(result = try JSONDecoder().decode(Test.self, from: XCTUnwrap(data)))
@@ -155,7 +155,7 @@ final class XUUIDTests: XCTestCase {
         let uuid = XUUID()
         var uuidString = uuid.uuidString
         _ = uuidString.removeLast()
-        let data = #"{"uuid":"\#(uuidString)"}"# .data(using: .utf8)
+        let data = #"{"uuid":"\#(uuidString)"}"#.data(using: .utf8)
 
         XCTAssertThrowsError(_ = try JSONDecoder().decode(Test.self, from: XCTUnwrap(data))) { error in
             XCTAssertNotNil(error as? DecodingError)

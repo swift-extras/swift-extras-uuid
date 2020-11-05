@@ -107,7 +107,7 @@ let foundationCompare = timing(name: "Foundation      ") {
 
 #if canImport(Darwin)
 extension XUUID {
-    public static func fromUUIDStringUsingUUIDParse(_ string: String) -> XUUID? {
+    static func fromUUIDStringUsingUUIDParse(_ string: String) -> XUUID? {
         // This is the base implementation... I guess this is what is done for
         // Foundation.UUID
         let _uuid = string.withCString { (cString) -> uuid_t? in
@@ -126,7 +126,7 @@ extension XUUID {
         return Self(uuid: uuid)
     }
 
-    public func lowercasedUsingUUID() -> String {
+    func lowercasedUsingUUID() -> String {
         var value: xuuid_t = self.uuid
         let target = UnsafeMutablePointer<Int8>.allocate(capacity: 37)
         uuid_unparse_lower(&value.0, target)
@@ -134,64 +134,3 @@ extension XUUID {
     }
 }
 #endif
-
-extension XUUID {
-    
-    public static func fromUUIDStringUsingSIMD(_ string: String) -> XUUID? {
-        guard string.utf8.count == 36 else {
-            // invalid length
-            return nil
-        }
-
-        var values = string.utf8.withContiguousStorageIfAvailable { (ptr) -> SIMD32<UInt8> in
-            SIMD32<UInt8>(UInt8(ptr[0]), UInt8(ptr[1]), UInt8(ptr[2]), UInt8(ptr[3]),
-                          UInt8(ptr[4]), UInt8(ptr[5]), UInt8(ptr[6]), UInt8(ptr[7]), // dash
-                          UInt8(ptr[9]), UInt8(ptr[10]), UInt8(ptr[11]), UInt8(ptr[12]), // dash
-                          UInt8(ptr[14]), UInt8(ptr[15]), UInt8(ptr[16]), UInt8(ptr[17]), // dash
-                          UInt8(ptr[19]), UInt8(ptr[20]), UInt8(ptr[21]), UInt8(ptr[22]), // dash
-                          UInt8(ptr[24]), UInt8(ptr[25]), UInt8(ptr[26]), UInt8(ptr[27]),
-                          UInt8(ptr[28]), UInt8(ptr[29]), UInt8(ptr[30]), UInt8(ptr[31]),
-                          UInt8(ptr[32]), UInt8(ptr[33]), UInt8(ptr[34]), UInt8(ptr[35]))
-        }!
-
-        let maskGreaterThanZero = values .>= UInt8(ascii: "0")
-        let maskSmallerThanNine = values .<= UInt8(ascii: "9")
-        let asciiNumber = maskGreaterThanZero .& maskSmallerThanNine
-
-        let maskGreaterThanSmallA = values .>= UInt8(ascii: "a")
-        let maskSmallerThanSmallF = values .<= UInt8(ascii: "f")
-        let smallCharacter = maskGreaterThanSmallA .& maskSmallerThanSmallF
-
-        let maskGreaterThanCapitalA = values .>= UInt8(ascii: "A")
-        let maskSmallerThanCapitalF = values .<= UInt8(ascii: "F")
-        let capitalCharacter = maskGreaterThanCapitalA .& maskSmallerThanCapitalF
-
-        var subtractNumber = SIMD32<UInt8>.zero
-        subtractNumber.replace(with: UInt8(ascii: "0"), where: asciiNumber)
-
-        var subtractLowercaseChar = SIMD32<UInt8>.zero
-        subtractLowercaseChar.replace(with: UInt8(ascii: "a") - 10, where: smallCharacter)
-
-        var subtractUppercaseChar = SIMD32<UInt8>.zero
-        subtractUppercaseChar.replace(with: UInt8(ascii: "A") - 10, where: capitalCharacter)
-
-        values &-= subtractNumber
-        values &-= subtractLowercaseChar
-        values &-= subtractUppercaseChar
-
-        let xor = asciiNumber .^ (smallCharacter .^ capitalCharacter)
-        guard all(xor) else { return nil }
-
-        values.evenHalf &<<= 4
-        values.evenHalf &+= values.oddHalf
-
-        let _uuid = (values[0], values[2], values[4], values[6],
-                     values[8], values[10], values[12], values[14],
-                     values[16], values[18], values[20], values[22],
-                     values[24], values[26], values[28], values[30])
-
-        return Self(uuid: _uuid)
-    }
-
-    
-}
