@@ -5,7 +5,7 @@ final class XUUIDTests: XCTestCase {
     func testInitFromStringSuccess() {
         let string = "E621E1F8-C36C-495A-93FC-0C247A3E6E5F"
         let uuid = XUUID(uuidString: string)
-        XCTAssertEqual(uuid, try XUUID(uuidString: XCTUnwrap(UUID(uuidString: string)?.uuidString)))
+        XCTAssertEqual(uuid?.uuidString, UUID(uuidString: string)?.uuidString)
 
         XCTAssertEqual(uuid?.uppercased(), string)
     }
@@ -13,9 +13,31 @@ final class XUUIDTests: XCTestCase {
     func testInitFromLowercaseStringSuccess() {
         let string = "E621E1F8-C36C-495A-93FC-0C247A3E6E5F".lowercased()
         let uuid = XUUID(uuidString: string)
-        XCTAssertEqual(uuid, try XUUID(uuidString: XCTUnwrap(UUID(uuidString: string)?.uuidString)))
+        XCTAssertEqual(uuid?.uuidString, UUID(uuidString: string)?.uuidString)
 
         XCTAssertEqual(uuid?.lowercased(), string)
+    }
+
+    func testInitFromNSStringSuccess() {
+        let nsString = NSMutableString(capacity: 16)
+        nsString.append("E621E1F8")
+        nsString.append("-")
+        nsString.append("C36C")
+        nsString.append("-")
+        nsString.append("495A")
+        nsString.append("-")
+        nsString.append("93FC")
+        nsString.append("-")
+        nsString.append("0C247A3E6E5F")
+
+        // TODO: I would love to enforce that the nsstring is not contiguous
+        //       here to enforce a special code path. I have no idea how to
+        //       achieve this though at the moment
+        // XCTAssertFalse((nsString as String).isContiguousUTF8)
+        let uuid = XUUID(uuidString: nsString as String)
+        XCTAssertEqual(uuid?.uuidString, UUID(uuidString: nsString as String)?.uuidString)
+
+        XCTAssertEqual(uuid?.uppercased(), nsString as String)
     }
 
     func testInitFromStringMissingCharacterAtEnd() {
