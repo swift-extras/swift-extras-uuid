@@ -32,7 +32,7 @@ Add `ExtrasUUID` to the target you want to use it in.
   ]
 ```
 
-Import the library and use it. In case you import Foundation in the same file, this package's UUID is prefixed with an X to avoid naming conflicts.
+Import the library and use it. This package's UUID is prefixed with an X to avoid naming conflicts in cases where you import Foundation in the same file.
 
 ```swift
 import ExtrasUUID
@@ -87,5 +87,4 @@ The performance tests will
 | Foundation   | 3.94s | 1.01s | 0.8s | 0.16s |
 | ExtrasUUID | 2.06s | 0.34s | 0.16s | 0.13s |
 | Speedup | ~2x | ~3x | ~5x | ~1x |
-
 
