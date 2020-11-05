@@ -1,35 +1,27 @@
-#if canImport(Darwin)
-import Darwin.C
-#endif
-
-public typealias uuid_t = (UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8)
+public typealias xuuid_t = (UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8)
 
 public struct XUUID {
-    private let _uuid: uuid_t
+    private let _uuid: xuuid_t
 
     public var uuid: (UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8) {
         _uuid
     }
 
-    static let null: uuid_t = (0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+    static let null: xuuid_t = (0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
 
     public init() {
-        #if canImport(Darwin)
-        self = Self.randomFromLibUUID()
-        #else
         self = Self.generateRandom()
-        #endif
     }
 
     public init?(uuidString string: String) {
-        guard let uuid = Self.fromUUIDStringUsingLoop(string) else {
+        guard let uuid = Self.fromUUIDString(string) else {
             return nil
         }
 
         self = uuid
     }
 
-    init(uuid: uuid_t) {
+    public init(uuid: xuuid_t) {
         self._uuid = uuid
     }
 
@@ -38,19 +30,11 @@ public struct XUUID {
     }
 
     public func lowercased() -> String {
-        #if canImport(Darwin)
-        return self.lowercasedUsingUUID()
-        #else
-        return self.lowercasedSimple()
-        #endif
+        self.toString(characters: Self.lowercaseLookup)
     }
 
     public func uppercased() -> String {
-        #if canImport(Darwin)
-        return self.uppercasedUsingUUID()
-        #else
-        return self.uppercasedSimple()
-        #endif
+        self.toString(characters: Self.uppercaseLookup)
     }
 }
 
@@ -148,7 +132,7 @@ extension XUUID {
             return nil
         }
 
-        var values = string.utf8.withContiguousStorageIfAvailable { (ptr) -> SIMD32<UInt8> in
+        guard var values = string.utf8.withContiguousStorageIfAvailable({ (ptr) -> SIMD32<UInt8> in
             SIMD32<UInt8>(UInt8(ptr[0]), UInt8(ptr[1]), UInt8(ptr[2]), UInt8(ptr[3]),
                           UInt8(ptr[4]), UInt8(ptr[5]), UInt8(ptr[6]), UInt8(ptr[7]), // dash
                           UInt8(ptr[9]), UInt8(ptr[10]), UInt8(ptr[11]), UInt8(ptr[12]), // dash
@@ -157,7 +141,11 @@ extension XUUID {
                           UInt8(ptr[24]), UInt8(ptr[25]), UInt8(ptr[26]), UInt8(ptr[27]),
                           UInt8(ptr[28]), UInt8(ptr[29]), UInt8(ptr[30]), UInt8(ptr[31]),
                           UInt8(ptr[32]), UInt8(ptr[33]), UInt8(ptr[34]), UInt8(ptr[35]))
-        }!
+        }) else {
+            var string = string
+            string.makeContiguousUTF8()
+            return self.fromUUIDStringUsingSIMD(string)
+        }
 
         let maskGreaterThanZero = values .>= UInt8(ascii: "0")
         let maskSmallerThanNine = values .<= UInt8(ascii: "9")
@@ -201,58 +189,12 @@ extension XUUID {
 
 // MARK: - Implementation details -
 
-// MARK: Lib UUID
-
-#if canImport(Darwin)
-extension XUUID {
-    public static func randomFromLibUUID() -> XUUID {
-        var _uuid: uuid_t = Self.null
-        uuid_generate(&_uuid.0)
-        return XUUID(uuid: _uuid)
-    }
-
-    public static func fromUUIDStringUsingUUIDParse(_ string: String) -> XUUID? {
-        // This is the base implementation... I guess this is what is done for
-        // Foundation.UUID
-        let _uuid = string.withCString { (cString) -> uuid_t? in
-            var _uuid: uuid_t = Self.null
-            guard uuid_parse(cString, &_uuid.0) == 0 else {
-                return nil
-            }
-
-            return _uuid
-        }
-
-        guard let uuid = _uuid else {
-            return nil
-        }
-
-        return Self(uuid: uuid)
-    }
-
-    public func lowercasedUsingUUID() -> String {
-        var value: uuid_t = self._uuid
-        let target = UnsafeMutablePointer<Int8>.allocate(capacity: 37)
-        uuid_unparse_lower(&value.0, target)
-        return String(cString: target)
-    }
-
-    public func uppercasedUsingUUID() -> String {
-        var value: uuid_t = self._uuid
-        let target = UnsafeMutablePointer<Int8>.allocate(capacity: 37)
-        uuid_unparse_upper(&value.0, target)
-        return String(cString: target)
-    }
-}
-#endif
-
-// MARK: Simple
 
 extension XUUID {
     /// thread safe secure random number generator.
     private static var generator = SystemRandomNumberGenerator()
     static func generateRandom() -> XUUID {
-        var _uuid: uuid_t = Self.null
+        var _uuid: xuuid_t = Self.null
         // https://tools.ietf.org/html/rfc4122#page-14
 
         // o  Set all the other bits to randomly (or pseudo-randomly) chosen
@@ -273,13 +215,13 @@ extension XUUID {
         return XUUID(uuid: _uuid)
     }
 
-    public static func fromUUIDStringUsingLoop(_ string: String) -> XUUID? {
+    static func fromUUIDString(_ string: String) -> XUUID? {
         guard string.utf8.count == 36 else {
             // invalid length
             return nil
         }
 
-        let _uuid = string.utf8.withContiguousStorageIfAvailable { (ptr) -> uuid_t? in
+        let _uuid = string.utf8.withContiguousStorageIfAvailable { (ptr) -> xuuid_t? in
             var uuid = Self.null
 
             let success = withUnsafeMutableBytes(of: &uuid) { (uuid) -> (Bool) in
@@ -350,42 +292,42 @@ extension XUUID {
         return .init(uuid: uuid)
     }
 
-    static let lowercaseLookup: [UInt8] = [
+    private static let lowercaseLookup: [UInt8] = [
         UInt8(ascii: "0"), UInt8(ascii: "1"), UInt8(ascii: "2"), UInt8(ascii: "3"),
         UInt8(ascii: "4"), UInt8(ascii: "5"), UInt8(ascii: "6"), UInt8(ascii: "7"),
         UInt8(ascii: "8"), UInt8(ascii: "9"), UInt8(ascii: "a"), UInt8(ascii: "b"),
         UInt8(ascii: "c"), UInt8(ascii: "d"), UInt8(ascii: "e"), UInt8(ascii: "f"),
     ]
 
-    static let uppercaseLookup: [UInt8] = [
+    private static let uppercaseLookup: [UInt8] = [
         UInt8(ascii: "0"), UInt8(ascii: "1"), UInt8(ascii: "2"), UInt8(ascii: "3"),
         UInt8(ascii: "4"), UInt8(ascii: "5"), UInt8(ascii: "6"), UInt8(ascii: "7"),
         UInt8(ascii: "8"), UInt8(ascii: "9"), UInt8(ascii: "A"), UInt8(ascii: "B"),
         UInt8(ascii: "C"), UInt8(ascii: "D"), UInt8(ascii: "E"), UInt8(ascii: "F"),
     ]
 
-    public func lowercasedSimple() -> String {
-        self.toString(characters: Self.lowercaseLookup)
-    }
-
-    public func uppercasedSimple() -> String {
-        self.toString(characters: Self.uppercaseLookup)
-    }
-
-    private typealias uuid_string_t = (
+    /// Use this type to create the backing store of a UUID String on stack.
+    ///
+    /// Using this type we ensure to only have one allocation for creating a String
+    /// even before Swift 5.3
+    private typealias xuuid_string_t = (
         UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8,
         UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8,
         UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8
     )
 
-    private static let nullString: uuid_string_t = (
+    private static let nullString: xuuid_string_t = (
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
     )
 
-    private func toString(characters: [UInt8]) -> String {
-        var string: uuid_string_t = Self.nullString
+    func toString(characters: [UInt8]) -> String {
+        var string: xuuid_string_t = Self.nullString
+        // to get the best performance we access the lookup table's unsafe buffer pointer
+        // since the lookup table has 16 elements and we shift the byte values in such a way
+        // that the max value is 15 (last 4 bytes = 16 values). For this reason the lookups
+        // are safe and we don't need Swifts safety guards.
         return characters.withUnsafeBufferPointer { (lookup) -> String in
             withUnsafeMutableBytes(of: &string) { (ptr) -> String in
                 ptr[0] = lookup[Int(uuid.0 >> 4)]

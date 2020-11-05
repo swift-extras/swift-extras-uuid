@@ -1,10 +1,10 @@
 import ExtrasUUID
 import XCTest
 
-final class SimpleLoopTests: XCTestCase {
+final class XUUIDTests: XCTestCase {
     func testInitFromStringSuccess() {
         let string = "E621E1F8-C36C-495A-93FC-0C247A3E6E5F"
-        let uuid = XUUID.fromUUIDStringUsingLoop(string)
+        let uuid = XUUID(uuidString: string)
         XCTAssertEqual(uuid, try XUUID(uuidString: XCTUnwrap(UUID(uuidString: string)?.uuidString)))
 
         XCTAssertEqual(uuid?.uppercased(), string)
@@ -12,7 +12,7 @@ final class SimpleLoopTests: XCTestCase {
 
     func testInitFromLowercaseStringSuccess() {
         let string = "E621E1F8-C36C-495A-93FC-0C247A3E6E5F".lowercased()
-        let uuid = XUUID.fromUUIDStringUsingLoop(string)
+        let uuid = XUUID(uuidString: string)
         XCTAssertEqual(uuid, try XUUID(uuidString: XCTUnwrap(UUID(uuidString: string)?.uuidString)))
 
         XCTAssertEqual(uuid?.lowercased(), string)
@@ -20,34 +20,34 @@ final class SimpleLoopTests: XCTestCase {
 
     func testInitFromStringMissingCharacterAtEnd() {
         let string = "E621E1F8-C36C-495A-93FC-0C247A3E6E5"
-        let uuid = XUUID.fromUUIDStringUsingLoop(string)
+        let uuid = XUUID(uuidString: string)
         XCTAssertNil(uuid)
     }
 
     func testInitFromStringInvalidCharacterAtEnd() {
         let string = "E621E1F8-C36C-495A-93FC-0C247A3E6E5H"
-        let uuid = XUUID.fromUUIDStringUsingLoop(string)
+        let uuid = XUUID(uuidString: string)
         XCTAssertNil(uuid)
     }
 
     func testInitFromStringInvalidSeparatorCharacter() {
         // illegal character: _
-        XCTAssertNil(XUUID.fromUUIDStringUsingLoop("E621E1F8-C36C-495A-93FC_0C247A3E6E5F"))
-        XCTAssertNil(XUUID.fromUUIDStringUsingLoop("E621E1F8-C36C-495A_93FC-0C247A3E6E5F"))
-        XCTAssertNil(XUUID.fromUUIDStringUsingLoop("E621E1F8-C36C_495A-93FC-0C247A3E6E5F"))
-        XCTAssertNil(XUUID.fromUUIDStringUsingLoop("E621E1F8_C36C-495A-93FC-0C247A3E6E5F"))
+        XCTAssertNil(XUUID(uuidString: "E621E1F8-C36C-495A-93FC_0C247A3E6E5F"))
+        XCTAssertNil(XUUID(uuidString: "E621E1F8-C36C-495A_93FC-0C247A3E6E5F"))
+        XCTAssertNil(XUUID(uuidString: "E621E1F8-C36C_495A-93FC-0C247A3E6E5F"))
+        XCTAssertNil(XUUID(uuidString: "E621E1F8_C36C-495A-93FC-0C247A3E6E5F"))
 
         // illegal character: 0
-        XCTAssertNil(XUUID.fromUUIDStringUsingLoop("E621E1F8-C36C-495A-93FC00C247A3E6E5F"))
-        XCTAssertNil(XUUID.fromUUIDStringUsingLoop("E621E1F8-C36C-495A093FC-0C247A3E6E5F"))
-        XCTAssertNil(XUUID.fromUUIDStringUsingLoop("E621E1F8-C36C0495A-93FC-0C247A3E6E5F"))
-        XCTAssertNil(XUUID.fromUUIDStringUsingLoop("E621E1F80C36C-495A-93FC-0C247A3E6E5F"))
+        XCTAssertNil(XUUID(uuidString: "E621E1F8-C36C-495A-93FC00C247A3E6E5F"))
+        XCTAssertNil(XUUID(uuidString: "E621E1F8-C36C-495A093FC-0C247A3E6E5F"))
+        XCTAssertNil(XUUID(uuidString: "E621E1F8-C36C0495A-93FC-0C247A3E6E5F"))
+        XCTAssertNil(XUUID(uuidString: "E621E1F80C36C-495A-93FC-0C247A3E6E5F"))
     }
 
     func testUnparse() {
         let string = "E621E1F8-C36C-495A-93FC-0C247A3E6E5F"
-        let uuid = XUUID.fromUUIDStringUsingLoop(string)
-        XCTAssertEqual(string.lowercased(), uuid?.lowercasedSimple())
+        let uuid = XUUID(uuidString: string)
+        XCTAssertEqual(string.lowercased(), uuid?.lowercased())
     }
 
     func testDescription() {
@@ -56,6 +56,50 @@ final class SimpleLoopTests: XCTestCase {
 
         XCTAssertEqual(fduuid.description, xuuid.description)
         XCTAssertEqual(fduuid.debugDescription, xuuid.debugDescription)
+    }
+    
+    func testFoundationInteropFromFoundation() {
+        let fduuid = UUID()
+        let xuuid = XUUID(uuid: fduuid.uuid)
+
+        XCTAssertEqual(fduuid.uuid.0, xuuid.uuid.0)
+        XCTAssertEqual(fduuid.uuid.1, xuuid.uuid.1)
+        XCTAssertEqual(fduuid.uuid.2, xuuid.uuid.2)
+        XCTAssertEqual(fduuid.uuid.3, xuuid.uuid.3)
+        XCTAssertEqual(fduuid.uuid.4, xuuid.uuid.4)
+        XCTAssertEqual(fduuid.uuid.5, xuuid.uuid.5)
+        XCTAssertEqual(fduuid.uuid.6, xuuid.uuid.6)
+        XCTAssertEqual(fduuid.uuid.7, xuuid.uuid.7)
+        XCTAssertEqual(fduuid.uuid.8, xuuid.uuid.8)
+        XCTAssertEqual(fduuid.uuid.9, xuuid.uuid.9)
+        XCTAssertEqual(fduuid.uuid.10, xuuid.uuid.10)
+        XCTAssertEqual(fduuid.uuid.11, xuuid.uuid.11)
+        XCTAssertEqual(fduuid.uuid.12, xuuid.uuid.12)
+        XCTAssertEqual(fduuid.uuid.13, xuuid.uuid.13)
+        XCTAssertEqual(fduuid.uuid.14, xuuid.uuid.14)
+        XCTAssertEqual(fduuid.uuid.15, xuuid.uuid.15)
+    }
+    
+    func testFoundationInteropToFoundation() {
+        let xuuid = XUUID()
+        let fduuid = UUID(uuid: xuuid.uuid)
+
+        XCTAssertEqual(fduuid.uuid.0, xuuid.uuid.0)
+        XCTAssertEqual(fduuid.uuid.1, xuuid.uuid.1)
+        XCTAssertEqual(fduuid.uuid.2, xuuid.uuid.2)
+        XCTAssertEqual(fduuid.uuid.3, xuuid.uuid.3)
+        XCTAssertEqual(fduuid.uuid.4, xuuid.uuid.4)
+        XCTAssertEqual(fduuid.uuid.5, xuuid.uuid.5)
+        XCTAssertEqual(fduuid.uuid.6, xuuid.uuid.6)
+        XCTAssertEqual(fduuid.uuid.7, xuuid.uuid.7)
+        XCTAssertEqual(fduuid.uuid.8, xuuid.uuid.8)
+        XCTAssertEqual(fduuid.uuid.9, xuuid.uuid.9)
+        XCTAssertEqual(fduuid.uuid.10, xuuid.uuid.10)
+        XCTAssertEqual(fduuid.uuid.11, xuuid.uuid.11)
+        XCTAssertEqual(fduuid.uuid.12, xuuid.uuid.12)
+        XCTAssertEqual(fduuid.uuid.13, xuuid.uuid.13)
+        XCTAssertEqual(fduuid.uuid.14, xuuid.uuid.14)
+        XCTAssertEqual(fduuid.uuid.15, xuuid.uuid.15)
     }
 
     func testCustomMirror() {

@@ -26,7 +26,7 @@ jobs:
         images:
         - swift:5.1
         - swift:5.2
-        - swiftlang/swift:nightly-5.3-bionic
+        - swift:5.3
         - swiftlang/swift:nightly-bionic
     container:
       image: ${{ matrix.images }}
@@ -55,7 +55,7 @@ jobs:
         images:
         - swift:5.1
         - swift:5.2
-        - swiftlang/swift:nightly-5.3-bionic
+        - swift:5.3
         - swiftlang/swift:nightly-bionic
     container:
       image: ${{ matrix.images }}
@@ -72,7 +72,7 @@ jobs:
         xcode:
         - Xcode_11.1.app
         - Xcode_11.6.app
-        - Xcode_12.app
+        - Xcode_12.2.app
     steps:
     - name: Checkout
       uses: actions/checkout@v2
@@ -96,7 +96,7 @@ jobs:
         xcode:
         - Xcode_11.1.app
         - Xcode_11.6.app
-        - Xcode_12.app
+        - Xcode_12.2.app
     steps:
     - name: Checkout
       uses: actions/checkout@v2
