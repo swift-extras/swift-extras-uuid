@@ -3,8 +3,8 @@
 A reimplementation of UUID in Swift without the use of Foundation or any other dependency. 
 
 [![Swift 5.1](https://img.shields.io/badge/Swift-5.1-blue.svg)](https://swift.org/download/)
-[![github-actions](https://github.com/fabianfett/swift-extras-uuid/workflows/CI/badge.svg)](https://github.com/fabianfett/swift-extras-uuid/actions)
-[![codecov](https://codecov.io/gh/fabianfett/swift-extras-uuid/branch/main/graph/badge.svg)](https://codecov.io/gh/fabianfett/swift-extras-uuid)
+[![github-actions](https://github.com/swift-extras/swift-extras-uuid/workflows/CI/badge.svg)](https://github.com/swift-extras/swift-extras-uuid/actions)
+[![codecov](https://codecov.io/gh/swift-extras/swift-extras-uuid/branch/main/graph/badge.svg)](https://codecov.io/gh/swift-extras/swift-extras-uuid)
 ![macOS](https://img.shields.io/badge/os-macOS-green.svg?style=flat)
 ![tuxOS](https://img.shields.io/badge/os-tuxOS-green.svg?style=flat)
 
@@ -18,7 +18,7 @@ Add dependency to your `Package.swift`.
 
 ```swift
   dependencies: [
-    .package(url: "https://github.com/fabianfett/swift-extras-uuid.git", .upToNextMajor(from: "0.1.0")),
+    .package(url: "https://github.com/swift-extras/swift-extras-uuid.git", .upToNextMajor(from: "0.1.0")),
   ],
 ```
 
