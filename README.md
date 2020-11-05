@@ -62,7 +62,7 @@ let fduuid = UUID(uuid: xuuid.uuid)
 To run simple performance tests, check out this repository and run:
 
 ```
-swift run -c release 
+swift run -c release --enable-test-discovery
 ```
 
 The performance tests will 
@@ -74,7 +74,7 @@ The performance tests will
 
 #### macOS 11 - Swift 5.3
 
-|  | Creating Random | Parsing | To String | Comparing 10000 |
+|  | Creating Random | Parsing | Stringify | Comparing |
 |:--|:--|:--|:--|:--|
 | Foundation   | 0.08s | 0.43s | 0.23s | 0.53s |
 | ExtrasUUID | 0.13s | 0.22s | 0.23s | 0.10s |
@@ -82,7 +82,7 @@ The performance tests will
 
 #### Linux - Swift 5.3
 
-|  | Creating Random | Parsing | To String | Comparing 10000 |
+|  | Creating Random | Parsing | Stringify | Comparing |
 |:--|:--|:--|:--|:--|
 | Foundation   | 3.94s | 1.01s | 0.8s | 0.16s |
 | ExtrasUUID | 2.06s | 0.34s | 0.16s | 0.13s |
