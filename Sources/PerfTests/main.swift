@@ -71,7 +71,7 @@ let uuidUnparse = timing(name: "uuid_unparse    ") {
 #endif
 
 let simpleUnparse = timing(name: "ExtrasUUID      ") {
-    let strings = xuuids.compactMap { $0.lowercased() }
+    let strings = xuuids.compactMap { $0.lowercased }
     precondition(strings.count == xuuids.count, "expected to unparse all")
 }
 

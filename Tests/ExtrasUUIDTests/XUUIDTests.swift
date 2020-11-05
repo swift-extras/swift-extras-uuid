@@ -7,7 +7,7 @@ final class XUUIDTests: XCTestCase {
         let uuid = XUUID(uuidString: string)
         XCTAssertEqual(uuid?.uuidString, UUID(uuidString: string)?.uuidString)
 
-        XCTAssertEqual(uuid?.uppercased(), string)
+        XCTAssertEqual(uuid?.uppercased, string)
     }
 
     func testInitFromLowercaseStringSuccess() {
@@ -15,7 +15,7 @@ final class XUUIDTests: XCTestCase {
         let uuid = XUUID(uuidString: string)
         XCTAssertEqual(uuid?.uuidString, UUID(uuidString: string)?.uuidString)
 
-        XCTAssertEqual(uuid?.lowercased(), string)
+        XCTAssertEqual(uuid?.lowercased, string)
     }
 
     func testInitFromNSStringSuccess() {
@@ -37,7 +37,7 @@ final class XUUIDTests: XCTestCase {
         let uuid = XUUID(uuidString: nsString as String)
         XCTAssertEqual(uuid?.uuidString, UUID(uuidString: nsString as String)?.uuidString)
 
-        XCTAssertEqual(uuid?.uppercased(), nsString as String)
+        XCTAssertEqual(uuid?.uppercased, nsString as String)
     }
 
     func testInitFromStringMissingCharacterAtEnd() {
@@ -69,7 +69,7 @@ final class XUUIDTests: XCTestCase {
     func testUnparse() {
         let string = "E621E1F8-C36C-495A-93FC-0C247A3E6E5F"
         let uuid = XUUID(uuidString: string)
-        XCTAssertEqual(string.lowercased(), uuid?.lowercased())
+        XCTAssertEqual(string.lowercased(), uuid?.lowercased)
     }
 
     func testDescription() {

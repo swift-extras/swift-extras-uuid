@@ -7,7 +7,7 @@ final class SIMDTests: XCTestCase {
         let uuid = XUUID.fromUUIDStringUsingSIMD(string)
         XCTAssertEqual(uuid, XUUID(uuidString: string))
 
-        XCTAssertEqual(uuid?.lowercased(), string.lowercased())
+        XCTAssertEqual(uuid?.lowercased, string.lowercased())
     }
 
     func testInitFromStringMissingCharacterAtEnd() {

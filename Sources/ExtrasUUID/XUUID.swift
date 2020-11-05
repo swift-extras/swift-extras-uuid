@@ -1,5 +1,6 @@
 public typealias xuuid_t = (UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8)
 
+/// Represents UUIDs as defined in [RFC 4122](https://tools.ietf.org/html/rfc4122).
 public struct XUUID {
     private let _uuid: xuuid_t
 
@@ -9,10 +10,14 @@ public struct XUUID {
 
     static let null: xuuid_t = (0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
 
+    /// Creates a random [v4](https://tools.ietf.org/html/rfc4122#section-4.1.3) UUID.
     public init() {
         self = Self.generateRandom()
     }
 
+    /// Creates a UUID from a string such as "E621E1F8-C36C-495A-93FC-0C247A3E6E5F".
+    ///
+    /// Returns nil for invalid strings.
     public init?(uuidString string: String) {
         guard let uuid = Self.fromUUIDString(string) else {
             return nil
@@ -21,19 +26,23 @@ public struct XUUID {
         self = uuid
     }
 
+    /// Creates a UUID from a `xuuid_t`.
     public init(uuid: xuuid_t) {
         self._uuid = uuid
     }
 
+    /// Returns a string representation for the UUID, such as "E621E1F8-C36C-495A-93FC-0C247A3E6E5F"
     public var uuidString: String {
-        self.uppercased()
+        self.uppercased
     }
 
-    public func lowercased() -> String {
+    /// Returns a lowercase string representation for the UUID, such as "e621e1f8-c36c-495a-93fc-0c247a3e6e5f"
+    public var lowercased: String {
         self.toString(characters: Self.lowercaseLookup)
     }
 
-    public func uppercased() -> String {
+    /// Returns an uppercase string representation for the UUID, such as "E621E1F8-C36C-495A-93FC-0C247A3E6E5F"
+    public var uppercased: String {
         self.toString(characters: Self.uppercaseLookup)
     }
 }
@@ -112,6 +121,7 @@ extension XUUID: Encodable {
 // MARK: - SIMD -
 
 public extension XUUID {
+    /// Creates a UUID from a SIMD vector
     init(vector: SIMD16<UInt8>) {
         self._uuid = (vector[0], vector[1], vector[2], vector[3],
                       vector[4], vector[5], vector[6], vector[7],
@@ -119,6 +129,7 @@ public extension XUUID {
                       vector[12], vector[13], vector[14], vector[15])
     }
 
+    /// Creates a simd vector from the UUID
     var vector: SIMD16<UInt8> {
         SIMD16(self._uuid.0, self._uuid.1, self._uuid.2, self._uuid.3,
                self._uuid.4, self._uuid.5, self._uuid.6, self._uuid.7,
@@ -126,6 +137,9 @@ public extension XUUID {
                self._uuid.12, self._uuid.13, self._uuid.14, self._uuid.15)
     }
 
+    /// Creates a UUID from a string such as "E621E1F8-C36C-495A-93FC-0C247A3E6E5F" using SIMD instructions.
+    ///
+    /// **warning**: As of now (Swift 5.3) this is rather slow ([SR-13353](https://bugs.swift.org/browse/SR-13353)) and should not be used in production.
     static func fromUUIDStringUsingSIMD(_ string: String) -> XUUID? {
         guard string.utf8.count == 36 else {
             // invalid length
