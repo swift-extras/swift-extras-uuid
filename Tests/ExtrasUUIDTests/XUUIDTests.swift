@@ -161,4 +161,8 @@ final class XUUIDTests: XCTestCase {
             XCTAssertNotNil(error as? DecodingError)
         }
     }
+
+    func testStructSize() {
+        XCTAssertEqual(MemoryLayout<XUUID>.size, 16)
+    }
 }

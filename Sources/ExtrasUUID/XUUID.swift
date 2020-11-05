@@ -132,31 +132,39 @@ public extension XUUID {
             return nil
         }
 
-        guard var values = string.utf8.withContiguousStorageIfAvailable({ (ptr) -> SIMD32<UInt8> in
-            SIMD32<UInt8>(UInt8(ptr[0]), UInt8(ptr[1]), UInt8(ptr[2]), UInt8(ptr[3]),
-                          UInt8(ptr[4]), UInt8(ptr[5]), UInt8(ptr[6]), UInt8(ptr[7]), // dash
-                          UInt8(ptr[9]), UInt8(ptr[10]), UInt8(ptr[11]), UInt8(ptr[12]), // dash
-                          UInt8(ptr[14]), UInt8(ptr[15]), UInt8(ptr[16]), UInt8(ptr[17]), // dash
-                          UInt8(ptr[19]), UInt8(ptr[20]), UInt8(ptr[21]), UInt8(ptr[22]), // dash
-                          UInt8(ptr[24]), UInt8(ptr[25]), UInt8(ptr[26]), UInt8(ptr[27]),
-                          UInt8(ptr[28]), UInt8(ptr[29]), UInt8(ptr[30]), UInt8(ptr[31]),
-                          UInt8(ptr[32]), UInt8(ptr[33]), UInt8(ptr[34]), UInt8(ptr[35]))
+        guard let values = string.utf8.withContiguousStorageIfAvailable({ (ptr) -> SIMD32<UInt8>? in
+            guard ptr[8] == UInt8(ascii: "-"), ptr[13] == UInt8(ascii: "-"), ptr[18] == UInt8(ascii: "-"), ptr[23] == UInt8(ascii: "-") else {
+                return nil
+            }
+
+            return SIMD32<UInt8>(UInt8(ptr[0]), UInt8(ptr[1]), UInt8(ptr[2]), UInt8(ptr[3]),
+                                 UInt8(ptr[4]), UInt8(ptr[5]), UInt8(ptr[6]), UInt8(ptr[7]), // dash
+                                 UInt8(ptr[9]), UInt8(ptr[10]), UInt8(ptr[11]), UInt8(ptr[12]), // dash
+                                 UInt8(ptr[14]), UInt8(ptr[15]), UInt8(ptr[16]), UInt8(ptr[17]), // dash
+                                 UInt8(ptr[19]), UInt8(ptr[20]), UInt8(ptr[21]), UInt8(ptr[22]), // dash
+                                 UInt8(ptr[24]), UInt8(ptr[25]), UInt8(ptr[26]), UInt8(ptr[27]),
+                                 UInt8(ptr[28]), UInt8(ptr[29]), UInt8(ptr[30]), UInt8(ptr[31]),
+                                 UInt8(ptr[32]), UInt8(ptr[33]), UInt8(ptr[34]), UInt8(ptr[35]))
         }) else {
             var string = string
             string.makeContiguousUTF8()
             return self.fromUUIDStringUsingSIMD(string)
         }
 
-        let maskGreaterThanZero = values .>= UInt8(ascii: "0")
-        let maskSmallerThanNine = values .<= UInt8(ascii: "9")
+        guard var vector = values else {
+            return nil
+        }
+
+        let maskGreaterThanZero = vector .>= UInt8(ascii: "0")
+        let maskSmallerThanNine = vector .<= UInt8(ascii: "9")
         let asciiNumber = maskGreaterThanZero .& maskSmallerThanNine
 
-        let maskGreaterThanSmallA = values .>= UInt8(ascii: "a")
-        let maskSmallerThanSmallF = values .<= UInt8(ascii: "f")
+        let maskGreaterThanSmallA = vector .>= UInt8(ascii: "a")
+        let maskSmallerThanSmallF = vector .<= UInt8(ascii: "f")
         let smallCharacter = maskGreaterThanSmallA .& maskSmallerThanSmallF
 
-        let maskGreaterThanCapitalA = values .>= UInt8(ascii: "A")
-        let maskSmallerThanCapitalF = values .<= UInt8(ascii: "F")
+        let maskGreaterThanCapitalA = vector .>= UInt8(ascii: "A")
+        let maskSmallerThanCapitalF = vector .<= UInt8(ascii: "F")
         let capitalCharacter = maskGreaterThanCapitalA .& maskSmallerThanCapitalF
 
         var subtractNumber = SIMD32<UInt8>.zero
@@ -168,20 +176,20 @@ public extension XUUID {
         var subtractUppercaseChar = SIMD32<UInt8>.zero
         subtractUppercaseChar.replace(with: UInt8(ascii: "A") - 10, where: capitalCharacter)
 
-        values &-= subtractNumber
-        values &-= subtractLowercaseChar
-        values &-= subtractUppercaseChar
+        vector &-= subtractNumber
+        vector &-= subtractLowercaseChar
+        vector &-= subtractUppercaseChar
 
         let xor = asciiNumber .^ (smallCharacter .^ capitalCharacter)
         guard all(xor) else { return nil }
 
-        values.evenHalf &<<= 4
-        values.evenHalf &+= values.oddHalf
+        vector.evenHalf &<<= 4
+        vector.evenHalf &+= vector.oddHalf
 
-        let _uuid = (values[0], values[2], values[4], values[6],
-                     values[8], values[10], values[12], values[14],
-                     values[16], values[18], values[20], values[22],
-                     values[24], values[26], values[28], values[30])
+        let _uuid = (vector[0], vector[2], vector[4], vector[6],
+                     vector[8], vector[10], vector[12], vector[14],
+                     vector[16], vector[18], vector[20], vector[22],
+                     vector[24], vector[26], vector[28], vector[30])
 
         return Self(uuid: _uuid)
     }
